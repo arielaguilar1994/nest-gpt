@@ -4,10 +4,11 @@ import {
   proConsDiscusserStreamUseCase,
   proConsDiscusserUseCase,
 } from './use-cases';
-import { OrthographyDto, ProConsDiscusserDTO } from './dtos';
+import { OrthographyDto, ProConsDiscusserDTO, TranslateDto } from './dtos';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
 import { IErrorGemini } from './common/interfaces';
+import { translateUseCase } from './use-cases/translate.use-case';
 
 @Injectable()
 export class GptService {
@@ -43,6 +44,17 @@ export class GptService {
     try {
       return await proConsDiscusserStreamUseCase(this.gemini, {
         prompt: proConsDiscusserDTO.prompt,
+      });
+    } catch (error) {
+      this.HandleException(error);
+    }
+  }
+
+  async translate(translateDto: TranslateDto) {
+    try {
+      return await translateUseCase(this.gemini, {
+        prompt: translateDto.prompt,
+        lang: translateDto.lang
       });
     } catch (error) {
       this.HandleException(error);
