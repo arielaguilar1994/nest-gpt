@@ -1,8 +1,5 @@
-import { GenerateContentParameters, GoogleGenAI } from '@google/genai';
-
-interface IOptions {
-  prompt: string;
-}
+import { GoogleGenAI } from '@google/genai';
+import { IOptions } from '../common/interfaces';
 
 export const orthographyCheckUseCase = async (
   gemini: GoogleGenAI,

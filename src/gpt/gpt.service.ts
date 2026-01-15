@@ -1,8 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { orthographyCheckUseCase } from './use-cases';
-import { OrthographyDto } from './dtos';
+import { BadRequestException, HttpCode, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  orthographyCheckUseCase,
+  proConsDiscusserStreamUseCase,
+  proConsDiscusserUseCase,
+} from './use-cases';
+import { OrthographyDto, ProConsDiscusserDTO } from './dtos';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
+import { IErrorGemini } from './common/interfaces';
 
 @Injectable()
 export class GptService {
@@ -15,8 +20,38 @@ export class GptService {
   }
 
   async orthographyCheck(orthographyDto: OrthographyDto) {
-    return await orthographyCheckUseCase(this.gemini, {
-      prompt: orthographyDto.prompt,
-    });
+    try {
+      return await orthographyCheckUseCase(this.gemini, {
+        prompt: orthographyDto.prompt,
+      });
+    } catch (error) {
+      this.HandleException(error);
+    }
+  }
+
+  async prosConsDiscusser(proConsDiscusserDTO: ProConsDiscusserDTO) {
+    try {
+      return await proConsDiscusserUseCase(this.gemini, {
+        prompt: proConsDiscusserDTO.prompt,
+      });
+    } catch (error) {
+      this.HandleException(error);
+    }
+  }
+
+  async prosConsDiscusserStream(proConsDiscusserDTO: ProConsDiscusserDTO) {
+    try {
+      return await proConsDiscusserStreamUseCase(this.gemini, {
+        prompt: proConsDiscusserDTO.prompt,
+      });
+    } catch (error) {
+      this.HandleException(error);
+    }
+  }
+
+  private HandleException(error: IErrorGemini) {
+    if(error.error.code === HttpStatus.TOO_MANY_REQUESTS) {
+      throw new BadRequestException(error.error.message);
+    }
   }
 }
