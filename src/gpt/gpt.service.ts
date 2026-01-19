@@ -61,9 +61,9 @@ export class GptService {
     }
   }
 
-  private HandleException(error: IErrorGemini) {
-    if(error.error.code === HttpStatus.TOO_MANY_REQUESTS) {
-      throw new BadRequestException(error.error.message);
+  private HandleException({error}: IErrorGemini) {
+    if(error.code === HttpStatus.TOO_MANY_REQUESTS) {
+      throw new BadRequestException(error.message);
     }
   }
 }

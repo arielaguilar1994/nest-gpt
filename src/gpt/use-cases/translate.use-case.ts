@@ -20,5 +20,5 @@ export const translateUseCase = async (
     }
   });
 
-  return response.text;
+  return { message: response.text };
 };
