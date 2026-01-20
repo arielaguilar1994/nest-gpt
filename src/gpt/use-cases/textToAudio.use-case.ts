@@ -47,7 +47,10 @@ const saveFile = async (speechFile: string, buffer: Buffer<ArrayBuffer>) => {
       bitDepth: 2 * 8
     });
 
-    writer.on('finish', resolve);
+    writer.on('finish', () => {
+      // esto es para cuando lo genere no devuelva una respuesta mal formada
+      setTimeout(resolve, 50);
+    });
     writer.on('error', reject);
     
     writer.write(buffer);

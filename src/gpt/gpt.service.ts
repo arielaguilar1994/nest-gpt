@@ -72,8 +72,8 @@ export class GptService {
         voice: textToAudio.voice
       });
     } catch (error) {
-      console.log(error);
       this.HandleException(error);
+      throw error;
     }
   }
 

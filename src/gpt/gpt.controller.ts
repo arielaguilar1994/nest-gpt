@@ -49,19 +49,16 @@ export class GptController {
   @Post('text-to-audio')
   async textToAudio(
     @Body() textToAudio: TextToAudioDto,
-    @Res() response: Response,
+    @Res() res: Response
   ) {
-    const audioBuffer = await this.gptService.textToAudio(textToAudio);
+    const audioPath = await this.gptService.textToAudio(textToAudio);
+    
+    res.setHeader('Content-Type', 'audio/wav');
+    res.status(HttpStatus.OK);
 
-    if (audioBuffer) {
-      response.setHeader('Content-Type', 'audio/wav');
-      response.status(HttpStatus.OK);
-
-      return response.sendFile(audioBuffer);
-    } else {
-      response.status(HttpStatus.NOT_FOUND);
-      return response.send({ message: 'audio buffer not found' });
-    }
+    res.sendFile(audioPath, err => {
+      if (err) res.status(HttpStatus.NOT_FOUND).send('Error to load file');
+    });
   }
 
   @Get('text-to-audio/:fileName')
