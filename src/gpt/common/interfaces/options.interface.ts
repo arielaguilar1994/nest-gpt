@@ -5,3 +5,7 @@ export interface IOptions {
 export interface ITranslateOption extends IOptions {
   lang: string;
 }
+
+export interface ITextToAudioOption extends IOptions {
+  voice?: string;
+}

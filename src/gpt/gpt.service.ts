@@ -1,14 +1,18 @@
-import { BadRequestException, HttpCode, HttpStatus, Injectable } from '@nestjs/common';
+import * as path from 'path';
+import * as fs from 'fs';
+
+import { BadRequestException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import {
   orthographyCheckUseCase,
   proConsDiscusserStreamUseCase,
   proConsDiscusserUseCase,
+  translateUseCase,
 } from './use-cases';
-import { OrthographyDto, ProConsDiscusserDTO, TranslateDto } from './dtos';
+import { OrthographyDto, ProConsDiscusserDTO, TextToAudioDto, TranslateDto } from './dtos';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
 import { IErrorGemini } from './common/interfaces';
-import { translateUseCase } from './use-cases/translate.use-case';
+import { textToAudioUseCase } from './use-cases/textToAudio.use-case';
 
 @Injectable()
 export class GptService {
@@ -61,8 +65,35 @@ export class GptService {
     }
   }
 
+  async textToAudio(textToAudio: TextToAudioDto) {
+    try {
+      return await textToAudioUseCase(this.gemini, {
+        prompt: textToAudio.prompt,
+        voice: textToAudio.voice
+      });
+    } catch (error) {
+      console.log(error);
+      this.HandleException(error);
+    }
+  }
+
+  async getAudioFileByName(fileName: string) {
+    try {
+      const filePath = path.resolve(__dirname, '../../generated/audios/', `${fileName}.wav`);
+      const wasFound = fs.existsSync(filePath);
+
+      if(!wasFound) throw new NotFoundException(`File ${fileName} was not found`);
+
+      return filePath;
+
+    } catch (error) {
+      this.HandleException(error);
+      throw error;
+    }
+  }
+
   private HandleException({error}: IErrorGemini) {
-    if(error.code === HttpStatus.TOO_MANY_REQUESTS) {
+    if(error?.code === HttpStatus.TOO_MANY_REQUESTS) {
       throw new BadRequestException(error.message);
     }
   }
