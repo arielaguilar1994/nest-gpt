@@ -1,4 +1,19 @@
-import { Body, Controller, Get, HttpStatus, Param, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  FileTypeValidator,
+  Get,
+  HttpStatus,
+  MaxFileSizeValidator,
+  Param,
+  ParseFilePipe,
+  Post,
+  Res,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { type Response } from 'express';
 import { GptService } from './gpt.service';
 import {
   OrthographyDto,
@@ -6,7 +21,9 @@ import {
   TextToAudioDto,
   TranslateDto,
 } from './dtos';
-import { response, type Response } from 'express';
+import { diskStorage } from 'multer';
+import { AudioFile } from './common/decorators/audio-file.decorator';
+import { UploadAudio } from './common/decorators/upload-audio.decorator';
 
 @Controller('gpt')
 export class GptController {
@@ -47,16 +64,13 @@ export class GptController {
   }
 
   @Post('text-to-audio')
-  async textToAudio(
-    @Body() textToAudio: TextToAudioDto,
-    @Res() res: Response
-  ) {
+  async textToAudio(@Body() textToAudio: TextToAudioDto, @Res() res: Response) {
     const audioPath = await this.gptService.textToAudio(textToAudio);
-    
+
     res.setHeader('Content-Type', 'audio/wav');
     res.status(HttpStatus.OK);
 
-    res.sendFile(audioPath, err => {
+    res.sendFile(audioPath, (err) => {
       if (err) res.status(HttpStatus.NOT_FOUND).send('Error to load file');
     });
   }
@@ -64,7 +78,7 @@ export class GptController {
   @Get('text-to-audio/:fileName')
   async getAudioFile(
     @Param('fileName') fileName: string,
-    @Res() response: Response
+    @Res() response: Response,
   ) {
     const audioFile = await this.gptService.getAudioFileByName(fileName);
 
@@ -72,5 +86,44 @@ export class GptController {
     response.status(HttpStatus.OK);
 
     return response.sendFile(audioFile);
+  }
+
+  // Mejorado con los decoradores globales
+  // @Post('audio-to-text')
+  // @UseInterceptors(
+  //   FileInterceptor('file', {
+  //     storage: diskStorage({
+  //       destination: './generated/uploads',
+  //       filename: (req, file, callback) => {
+  //         const fileExtension = file.originalname.split('.').pop();
+  //         const fileName = `${new Date().getTime()}.${fileExtension}`;
+  //         return callback(null, fileName);
+  //       },
+  //     }),
+  //   }),
+  // )
+  // async audioToText(
+  //   @UploadedFile(
+  //     new ParseFilePipe({
+  //       validators: [
+  //         new MaxFileSizeValidator({
+  //           maxSize: 1000 * 1024 * 5,
+  //           errorMessage: 'File is bigger than 5 mb',
+  //         }),
+  //         new FileTypeValidator({
+  //           fileType: /^audio\/.*/
+  //         })
+  //       ],
+  //     }),
+  //   )
+  //   file: Express.Multer.File,
+  // ) {
+  @Post('audio-to-text')
+  @UploadAudio()
+  async audioToText(
+    @AudioFile() file: Express.Multer.File
+  ){
+    console.log(file);
+    return 'done';
   }
 }
