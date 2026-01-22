@@ -5,7 +5,7 @@ export const audioToTextUseCase = async (
   gemini: GoogleGenAI,
   options: IAudioToTextOption
 ) => {
-  const { prompt = 'Describe this audio clip', audioFile } = options;
+  const { prompt = 'Transcribe this audio file like verbose_json format', audioFile } = options;
   const file = await gemini.files.upload({
     file: audioFile.path,
     config: { mimeType: audioFile.mimetype }
