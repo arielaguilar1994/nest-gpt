@@ -1,18 +1,30 @@
 import * as path from 'path';
 import * as fs from 'fs';
 
-import { BadRequestException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   orthographyCheckUseCase,
   proConsDiscusserStreamUseCase,
   proConsDiscusserUseCase,
   translateUseCase,
 } from './use-cases';
-import { OrthographyDto, ProConsDiscusserDTO, TextToAudioDto, TranslateDto } from './dtos';
+import {
+  AudioToTextDto,
+  OrthographyDto,
+  ProConsDiscusserDTO,
+  TextToAudioDto,
+  TranslateDto,
+} from './dtos';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
 import { IErrorGemini } from './common/interfaces';
 import { textToAudioUseCase } from './use-cases/textToAudio.use-case';
+import { audioToTextUseCase } from './use-cases/audio-to-text.use-case';
 
 @Injectable()
 export class GptService {
@@ -58,7 +70,7 @@ export class GptService {
     try {
       return await translateUseCase(this.gemini, {
         prompt: translateDto.prompt,
-        lang: translateDto.lang
+        lang: translateDto.lang,
       });
     } catch (error) {
       this.HandleException(error);
@@ -69,7 +81,7 @@ export class GptService {
     try {
       return await textToAudioUseCase(this.gemini, {
         prompt: textToAudio.prompt,
-        voice: textToAudio.voice
+        voice: textToAudio.voice,
       });
     } catch (error) {
       this.HandleException(error);
@@ -79,21 +91,41 @@ export class GptService {
 
   async getAudioFileByName(fileName: string) {
     try {
-      const filePath = path.resolve(__dirname, '../../generated/audios/', `${fileName}.wav`);
+      const filePath = path.resolve(
+        __dirname,
+        '../../generated/audios/',
+        `${fileName}.wav`,
+      );
       const wasFound = fs.existsSync(filePath);
 
-      if(!wasFound) throw new NotFoundException(`File ${fileName} was not found`);
+      if (!wasFound)
+        throw new NotFoundException(`File ${fileName} was not found`);
 
       return filePath;
-
     } catch (error) {
       this.HandleException(error);
       throw error;
     }
   }
 
-  private HandleException({error}: IErrorGemini) {
-    if(error?.code === HttpStatus.TOO_MANY_REQUESTS) {
+  async audioToText(
+    audioToText: AudioToTextDto,
+    audioFile: Express.Multer.File,
+  ) {
+    try {
+      // prompt: 'Transcribe this audio file like WEBVTT format',
+      // prompt: 'Transcribe this audio file like verbose_json format',
+      return await audioToTextUseCase(this.gemini, {
+        prompt: audioToText.prompt,
+        audioFile,
+      });
+    } catch (error) {
+      this.HandleException(error);
+    }
+  }
+
+  private HandleException({ error }: IErrorGemini) {
+    if (error?.code === HttpStatus.TOO_MANY_REQUESTS) {
       throw new BadRequestException(error.message);
     }
   }

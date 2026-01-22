@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { type Response } from 'express';
 import { GptService } from './gpt.service';
 import {
+  AudioToTextDto,
   OrthographyDto,
   ProConsDiscusserDTO,
   TextToAudioDto,
@@ -121,9 +122,12 @@ export class GptController {
   @Post('audio-to-text')
   @UploadAudio()
   async audioToText(
-    @AudioFile() file: Express.Multer.File
+    @AudioFile() file: Express.Multer.File,
+    @Body() audioToTextDto: AudioToTextDto,
   ){
-    console.log(file);
-    return 'done';
+    return await this.gptService.audioToText(
+      audioToTextDto,
+      file
+    );
   }
 }
