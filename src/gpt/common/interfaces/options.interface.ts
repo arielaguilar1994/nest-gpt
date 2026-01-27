@@ -13,3 +13,8 @@ export interface ITextToAudioOption extends IOptions {
 export interface IAudioToTextOption extends  Partial<IOptions> {
   audioFile: Express.Multer.File;
 }
+
+export interface IImageGenerationOption extends IOptions {
+  originalImage?: string;
+  maskImage?: string;
+}

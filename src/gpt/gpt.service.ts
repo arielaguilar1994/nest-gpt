@@ -6,8 +6,10 @@ import {
   HttpStatus,
   Injectable,
   NotFoundException,
+  ConflictException
 } from '@nestjs/common';
 import {
+  imageGenerationUseCase,
   orthographyCheckUseCase,
   proConsDiscusserStreamUseCase,
   proConsDiscusserUseCase,
@@ -15,6 +17,7 @@ import {
 } from './use-cases';
 import {
   AudioToTextDto,
+  ImageGenerationDto,
   OrthographyDto,
   ProConsDiscusserDTO,
   TextToAudioDto,
@@ -22,9 +25,9 @@ import {
 } from './dtos';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
-import { IErrorGemini } from './common/interfaces';
 import { textToAudioUseCase } from './use-cases/textToAudio.use-case';
 import { audioToTextUseCase } from './use-cases/audio-to-text.use-case';
+import { IGeminiError } from './common/interfaces';
 
 @Injectable()
 export class GptService {
@@ -124,9 +127,38 @@ export class GptService {
     }
   }
 
-  private HandleException({ error }: IErrorGemini) {
-    if (error?.code === HttpStatus.TOO_MANY_REQUESTS) {
-      throw new BadRequestException(error.message);
+  async imageGeneration(imageGenerationDto: ImageGenerationDto) {
+    try {
+      return await imageGenerationUseCase(this.gemini, { ...imageGenerationDto });
+    } catch (error) {
+      this.HandleException(error);
     }
+  }
+
+  async getImageFileByName(fileName: string) {
+    try {
+      const filePath = path.resolve(
+        __dirname,
+        '../../generated/images/',
+        `${fileName}.png`
+      );
+
+      const existFile = fs.existsSync(filePath);
+
+      if(!existFile)  throw new NotFoundException(`File ${fileName} was not found`);
+
+      return filePath;
+    } catch (error) {
+      this.HandleException(error);
+      throw error;
+    }
+  }
+
+  private HandleException(error: IGeminiError) {
+    if (error?.status === HttpStatus.TOO_MANY_REQUESTS) {
+      throw new ConflictException(error.message);
+    }
+
+    throw new BadRequestException(error.message);
   }
 }

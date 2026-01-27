@@ -1,9 +1,7 @@
-export interface IErrorGemini {
-  error: Error
-}
+import { HttpStatus } from "@nestjs/common";
 
-export interface Error {
-  message: string
-  code: number
-  status: string
+export interface IGeminiError {
+  name: string;
+  status: HttpStatus;
+  message: string;
 }
