@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import {
   imageGenerationUseCase,
+  imageVariationUseCase,
   orthographyCheckUseCase,
   proConsDiscusserStreamUseCase,
   proConsDiscusserUseCase,
@@ -18,6 +19,7 @@ import {
 import {
   AudioToTextDto,
   ImageGenerationDto,
+  ImageVariationDto,
   OrthographyDto,
   ProConsDiscusserDTO,
   TextToAudioDto,
@@ -152,6 +154,10 @@ export class GptService {
       this.HandleException(error);
       throw error;
     }
+  }
+
+  async imageVariation(imageVariationDto: ImageVariationDto) {
+    return await imageVariationUseCase(this.gemini, imageVariationDto.baseImage);
   }
 
   private HandleException(error: IGeminiError) {

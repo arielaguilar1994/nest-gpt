@@ -46,6 +46,7 @@ export const imageGenerationUseCase = async (
         contents: [
           { text: prompt },
           { inlineData: { mimeType: 'image/png', data: imageBase64 } },
+          { inlineData: { mimeType: 'image/png', data: maskImage } }
         ],
       });
 
