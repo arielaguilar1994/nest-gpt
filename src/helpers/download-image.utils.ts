@@ -16,16 +16,16 @@ export const getImageGeneratedBase64 = (name: string) => {
   return imageData.toString('base64');
 };
 
-export const downloadImageAsPng = async (generateImages: GeneratedImage) => {
+export const downloadImageAsPng = async (generateImages: GeneratedImage, fullPath = false) => {
   if (generateImages.image && generateImages.image.imageBytes) {
     const buffer = Buffer.from(generateImages.image.imageBytes, 'base64');
-    const path = await saveImageFromBuffer(buffer)
+    const path = await saveImageFromBuffer(buffer, fullPath)
     return path;
   }
   throw new Error('Save image failed!');
 };
 
-export const saveImageFromBuffer = async(buffer: Buffer<ArrayBuffer>) => {
+export const saveImageFromBuffer = async(buffer: Buffer<ArrayBuffer>, fullPath = false) => {
   const folderPath = path.resolve('./', './generated/images/');
     fs.mkdirSync(folderPath, { recursive: true });
 
@@ -35,7 +35,7 @@ export const saveImageFromBuffer = async(buffer: Buffer<ArrayBuffer>) => {
 
     await sharp(buffer).png().ensureAlpha().toFile(filePath);
 
-    return imageName;
+    return fullPath ? filePath : imageName;
 }
 
 //TODO:  Ver si realmente o uso
